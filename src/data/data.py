@@ -43,9 +43,7 @@ def create_data_loaders(
     sampling_strategy=5000,
 ):
     if balance:
-        (sample_weights,) = get_sample_weights(
-            dataset, train_dataset, sampling_strategy
-        )
+        sample_weights = get_sample_weights(dataset, train_dataset)
 
         train_sampler = WeightedRandomSampler(
             weights=sample_weights,

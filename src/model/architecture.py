@@ -7,8 +7,10 @@ def create_model(num_classes=4, freeze_features=True):
         weights=torchvision.models.EfficientNet_B0_Weights.DEFAULT
     )
     if freeze_features:
-        for param in model.features.parameters():
+        for param in model.features[:5].parameters():
             param.requires_grad = False
+        for param in model.features[5:].parameters():
+            param.requires_grad = True
 
     model.classifier = nn.Sequential(
         nn.Dropout(p=0.2, inplace=True),

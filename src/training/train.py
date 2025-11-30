@@ -43,6 +43,13 @@ def main(args):
     num_classes = len(dataset.classes)
     model = create_model(num_classes=num_classes, freeze_features=True).to(device)
 
+    if args.resume_from:
+        if not os.path.isfile(args.resume_from):
+            raise FileNotFoundError(f"Resume checkpoint not found: {args.resume_from}")
+        print(f"Loading model weights from {args.resume_from}")
+        model.load_state_dict(torch.load(args.resume_from, map_location=device))
+        print("✅ Model weights loaded successfully.")
+
     # Optimizer & Loss
     loss_fn = torch.nn.CrossEntropyLoss()
     optimizer = torch.optim.Adam(
@@ -88,6 +95,12 @@ if __name__ == "__main__":
     )
     parser.add_argument("--log_dir", type=str, default="../experiments/run1")
     parser.add_argument("--save_path", type=str, default="../models/run1.pth")
+    parser.add_argument(
+        "--resume_from",
+        type=str,
+        default=None,
+        help="Path to a saved model (.pth) to resume training on",
+    )
 
     args = parser.parse_args()
     main(args)
