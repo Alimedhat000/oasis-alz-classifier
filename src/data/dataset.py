@@ -1,29 +1,30 @@
-from pathlib import Path
-
-from loguru import logger
-from tqdm import tqdm
-import typer
-
-from src.config import PROCESSED_DATA_DIR, RAW_DATA_DIR
-
-app = typer.Typer()
+from torch.utils.data import Dataset
 
 
-@app.command()
-def main(
-    # ---- REPLACE DEFAULT PATHS AS APPROPRIATE ----
-    input_path: Path = RAW_DATA_DIR / "dataset.csv",
-    output_path: Path = PROCESSED_DATA_DIR / "dataset.csv",
-    # ----------------------------------------------
-):
-    # ---- REPLACE THIS WITH YOUR OWN CODE ----
-    logger.info("Processing dataset...")
-    for i in tqdm(range(10), total=10):
-        if i == 5:
-            logger.info("Something happened for iteration 5.")
-    logger.success("Processing dataset complete.")
-    # -----------------------------------------
+class TransformDataset(Dataset):
+    """
+    Wrapper class to assign a transform to a subset.
+    Forwards .indices if the underlying subset has it (e.g., from random_split).
+    """
 
+    def __init__(self, subset, transform=None):
+        self.subset = subset
+        self.transform = transform
 
-if __name__ == "__main__":
-    app()
+    def __len__(self):
+        return len(self.subset)
+
+    def __getitem__(self, idx):
+        img, label = self.subset[idx]
+        if self.transform:
+            img = self.transform(img)
+        return img, label
+
+    @property
+    def indices(self):
+        # Forward .indices if available (e.g., when subset is a torch.utils.data.Subset)
+        if hasattr(self.subset, "indices"):
+            return self.subset.indices
+        else:
+            # Optional: raise or return None if not applicable
+            raise AttributeError("'subset' has no attribute 'indices'")

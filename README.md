@@ -58,5 +58,18 @@
         └── seed.py           <- Random seed utilities
 ```
 
+### Training from Terminal 
+
+```
+python3 -m src.training.train
+    --data_dir data/raw/   
+    --balance   
+    --epochs 1   
+    --batch_size 128   
+    --lr 0.001   
+    --log_dir experiments/alz_aug_1.0.0   
+    --save_path models/alz_aug_1.0.0.pth
+
+```
 --------
 
