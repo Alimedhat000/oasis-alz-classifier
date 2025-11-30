@@ -5,6 +5,8 @@ from torch.utils.data import DataLoader, random_split, WeightedRandomSampler
 
 
 def get_sample_weights(dataset, train_dataset):
+    # Code taken from:
+    #     https://www.maskaravivek.com/post/pytorch-weighted-random-sampler/
     y_train_indices = train_dataset.indices
     y_train = [dataset.targets[i] for i in y_train_indices]
 
@@ -16,7 +18,7 @@ def get_sample_weights(dataset, train_dataset):
     sample_weights = np.array([weights[t] for t in y_train])
     sample_weights = torch.from_numpy(sample_weights)
 
-    return sample_weights, class_sample_counts
+    return sample_weights
 
 
 def load_dataset(data_dir, transform=None):
@@ -38,14 +40,17 @@ def create_data_loaders(
     dataset,
     batch_size=128,
     balance=True,
+    sampling_strategy=5000,
 ):
     if balance:
-        sample_weights, class_counts = get_sample_weights(dataset, train_dataset)
-        min_class = class_counts.min()
-        num_classes = len(class_counts)
-        num_samples = int(min_class * num_classes)
+        (sample_weights,) = get_sample_weights(
+            dataset, train_dataset, sampling_strategy
+        )
+
         train_sampler = WeightedRandomSampler(
-            weights=sample_weights, num_samples=num_samples, replacement=True
+            weights=sample_weights,
+            num_samples=len(sample_weights),
+            replacement=True,
         )
         train_shuffle = False
     else:
@@ -57,16 +62,23 @@ def create_data_loaders(
         batch_size=batch_size,
         sampler=train_sampler,
         shuffle=train_shuffle,
+        num_workers=8,
+        pin_memory=True,
+        persistent_workers=True if train_sampler else False,
     )
     val_loader = DataLoader(
         val_dataset,
         batch_size=batch_size,
         shuffle=False,
+        num_workers=8,
+        pin_memory=True,
     )
     test_loader = DataLoader(
         test_dataset,
         batch_size=batch_size,
         shuffle=False,
+        num_workers=8,
+        pin_memory=True,
     )
 
     return train_loader, val_loader, test_loader
